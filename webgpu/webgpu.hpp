@@ -182,6 +182,12 @@ ENUM(BufferMapAsyncStatus)
 	ENUM_ENTRY(UnmappedBeforeCallback, 0x00000005)
 	ENUM_ENTRY(Force32, 0x7FFFFFFF)
 END
+ENUM(BufferMapState)
+	ENUM_ENTRY(Unmapped, 0x00000000)
+	ENUM_ENTRY(Pending, 0x00000001)
+	ENUM_ENTRY(Mapped, 0x00000002)
+	ENUM_ENTRY(Force32, 0x7FFFFFFF)
+END
 ENUM(CompareFunction)
 	ENUM_ENTRY(Undefined, 0x00000000)
 	ENUM_ENTRY(Never, 0x00000001)
@@ -246,6 +252,13 @@ ENUM(ErrorType)
 	ENUM_ENTRY(DeviceLost, 0x00000005)
 	ENUM_ENTRY(Force32, 0x7FFFFFFF)
 END
+ENUM(ExternalTextureRotation)
+	ENUM_ENTRY(Rotate0Degrees, 0x00000000)
+	ENUM_ENTRY(Rotate90Degrees, 0x00000001)
+	ENUM_ENTRY(Rotate180Degrees, 0x00000002)
+	ENUM_ENTRY(Rotate270Degrees, 0x00000003)
+	ENUM_ENTRY(Force32, 0x7FFFFFFF)
+END
 ENUM(FeatureName)
 	ENUM_ENTRY(Undefined, 0x00000000)
 	ENUM_ENTRY(DepthClipControl, 0x00000001)
@@ -263,6 +276,7 @@ ENUM(FeatureName)
 	ENUM_ENTRY(DawnMultiPlanarFormats, 0x000003EB)
 	ENUM_ENTRY(DawnNative, 0x000003EC)
 	ENUM_ENTRY(ChromiumExperimentalDp4a, 0x000003ED)
+	ENUM_ENTRY(TimestampQueryInsidePasses, 0x000003EE)
 	ENUM_ENTRY(Force32, 0x7FFFFFFF)
 END
 ENUM(FilterMode)
@@ -375,6 +389,7 @@ ENUM(SType)
 	ENUM_ENTRY(DawnInstanceDescriptor, 0x000003EC)
 	ENUM_ENTRY(DawnCacheDeviceDescriptor, 0x000003ED)
 	ENUM_ENTRY(DawnAdapterPropertiesPowerPreference, 0x000003EE)
+	ENUM_ENTRY(DawnBufferDescriptorErrorInfoFromWireClient, 0x000003EF)
 	ENUM_ENTRY(Force32, 0x7FFFFFFF)
 END
 ENUM(SamplerBindingType)
@@ -668,6 +683,10 @@ STRUCT(DawnAdapterPropertiesPowerPreference)
 	void setDefault();
 END
 
+STRUCT(DawnBufferDescriptorErrorInfoFromWireClient)
+	void setDefault();
+END
+
 STRUCT(DawnCacheDeviceDescriptor)
 	void setDefault();
 END
@@ -688,6 +707,10 @@ STRUCT(DawnTogglesDeviceDescriptor)
 	void setDefault();
 END
 
+STRUCT(Extent2D)
+	void setDefault();
+END
+
 STRUCT(Extent3D)
 	Extent3D(uint32_t width, uint32_t height, uint32_t depthOrArrayLayers) : WGPUExtent3D{ width, height, depthOrArrayLayers } {}
 	void setDefault();
@@ -702,6 +725,10 @@ STRUCT(ExternalTextureBindingLayout)
 END
 
 STRUCT(Limits)
+	void setDefault();
+END
+
+STRUCT(Origin2D)
 	void setDefault();
 END
 
@@ -824,10 +851,6 @@ DESCRIPTOR(CopyTextureForBrowserOptions)
 	void setDefault();
 END
 
-DESCRIPTOR(ExternalTextureDescriptor)
-	void setDefault();
-END
-
 DESCRIPTOR(InstanceDescriptor)
 	void setDefault();
 END
@@ -920,7 +943,15 @@ DESCRIPTOR(DepthStencilState)
 	void setDefault();
 END
 
+DESCRIPTOR(ExternalTextureDescriptor)
+	void setDefault();
+END
+
 DESCRIPTOR(ImageCopyBuffer)
+	void setDefault();
+END
+
+DESCRIPTOR(ImageCopyExternalTexture)
 	void setDefault();
 END
 
@@ -1043,6 +1074,7 @@ END
 
 HANDLE(Buffer)
 	void destroy();
+	BufferMapState getMapState();
 	uint64_t getSize();
 	BufferUsage getUsage();
 	void mapAsync(MapModeFlags mode, size_t offset, size_t size, BufferMapCallback&& callback);
@@ -1106,7 +1138,7 @@ HANDLE(Device)
 	Buffer createBuffer(const BufferDescriptor& descriptor);
 	CommandEncoder createCommandEncoder(const CommandEncoderDescriptor& descriptor);
 	ComputePipeline createComputePipeline(const ComputePipelineDescriptor& descriptor);
-	Buffer createErrorBuffer();
+	Buffer createErrorBuffer(const BufferDescriptor& descriptor);
 	ExternalTexture createErrorExternalTexture();
 	Texture createErrorTexture(const TextureDescriptor& descriptor);
 	ExternalTexture createExternalTexture(const ExternalTextureDescriptor& externalTextureDescriptor);
@@ -1161,6 +1193,7 @@ HANDLE(QuerySet)
 END
 
 HANDLE(Queue)
+	void copyExternalTextureForBrowser(const ImageCopyExternalTexture& source, const ImageCopyTexture& destination, const Extent3D& copySize, const CopyTextureForBrowserOptions& options);
 	void copyTextureForBrowser(const ImageCopyTexture& source, const ImageCopyTexture& destination, const Extent3D& copySize, const CopyTextureForBrowserOptions& options);
 	void submit(uint32_t commandCount, CommandBuffer const * commands);
 	void submit(const std::vector<WGPUCommandBuffer>& commands);
@@ -1354,6 +1387,12 @@ void DawnAdapterPropertiesPowerPreference::setDefault() {
 	chain.sType = SType::DawnAdapterPropertiesPowerPreference;
 }
 
+// Methods of DawnBufferDescriptorErrorInfoFromWireClient
+void DawnBufferDescriptorErrorInfoFromWireClient::setDefault() {
+	((ChainedStruct*)&chain)->setDefault();
+	chain.sType = SType::DawnBufferDescriptorErrorInfoFromWireClient;
+}
+
 // Methods of DawnCacheDeviceDescriptor
 void DawnCacheDeviceDescriptor::setDefault() {
 	((ChainedStruct*)&chain)->setDefault();
@@ -1384,6 +1423,10 @@ void DawnTogglesDeviceDescriptor::setDefault() {
 	chain.sType = SType::DawnTogglesDeviceDescriptor;
 }
 
+// Methods of Extent2D
+void Extent2D::setDefault() {
+}
+
 // Methods of Extent3D
 void Extent3D::setDefault() {
 	height = 1;
@@ -1400,10 +1443,6 @@ void ExternalTextureBindingEntry::setDefault() {
 void ExternalTextureBindingLayout::setDefault() {
 	((ChainedStruct*)&chain)->setDefault();
 	chain.sType = SType::ExternalTextureBindingLayout;
-}
-
-// Methods of ExternalTextureDescriptor
-void ExternalTextureDescriptor::setDefault() {
 }
 
 // Methods of InstanceDescriptor
@@ -1436,6 +1475,7 @@ void Limits::setDefault() {
 	maxInterStageShaderComponents = 0;
 	maxInterStageShaderVariables = 0;
 	maxColorAttachments = 0;
+	maxColorAttachmentBytesPerSample = 0;
 	maxComputeWorkgroupStorageSize = 0;
 	maxComputeInvocationsPerWorkgroup = 0;
 	maxComputeWorkgroupSizeX = 0;
@@ -1449,6 +1489,10 @@ void MultisampleState::setDefault() {
 	count = 1;
 	mask = 0xFFFFFFFF;
 	alphaToCoverageEnabled = false;
+}
+
+// Methods of Origin2D
+void Origin2D::setDefault() {
 }
 
 // Methods of Origin3D
@@ -1700,9 +1744,20 @@ void DepthStencilState::setDefault() {
 	((StencilFaceState*)&stencilBack)->setDefault();
 }
 
+// Methods of ExternalTextureDescriptor
+void ExternalTextureDescriptor::setDefault() {
+	((Origin2D*)&visibleOrigin)->setDefault();
+	((Extent2D*)&visibleSize)->setDefault();
+}
+
 // Methods of ImageCopyBuffer
 void ImageCopyBuffer::setDefault() {
 	((TextureDataLayout*)&layout)->setDefault();
+}
+
+// Methods of ImageCopyExternalTexture
+void ImageCopyExternalTexture::setDefault() {
+	((Origin3D*)&origin)->setDefault();
 }
 
 // Methods of ImageCopyTexture
@@ -1838,6 +1893,9 @@ void BindGroupLayout::release() {
 // Methods of Buffer
 void Buffer::destroy() {
 	return wgpuBufferDestroy(m_raw);
+}
+BufferMapState Buffer::getMapState() {
+	return static_cast<BufferMapState>(wgpuBufferGetMapState(m_raw));
 }
 uint64_t Buffer::getSize() {
 	return wgpuBufferGetSize(m_raw);
@@ -2002,8 +2060,8 @@ CommandEncoder Device::createCommandEncoder(const CommandEncoderDescriptor& desc
 ComputePipeline Device::createComputePipeline(const ComputePipelineDescriptor& descriptor) {
 	return wgpuDeviceCreateComputePipeline(m_raw, &descriptor);
 }
-Buffer Device::createErrorBuffer() {
-	return wgpuDeviceCreateErrorBuffer(m_raw);
+Buffer Device::createErrorBuffer(const BufferDescriptor& descriptor) {
+	return wgpuDeviceCreateErrorBuffer(m_raw, &descriptor);
 }
 ExternalTexture Device::createErrorExternalTexture() {
 	return wgpuDeviceCreateErrorExternalTexture(m_raw);
@@ -2150,6 +2208,9 @@ void QuerySet::release() {
 
 
 // Methods of Queue
+void Queue::copyExternalTextureForBrowser(const ImageCopyExternalTexture& source, const ImageCopyTexture& destination, const Extent3D& copySize, const CopyTextureForBrowserOptions& options) {
+	return wgpuQueueCopyExternalTextureForBrowser(m_raw, &source, &destination, &copySize, &options);
+}
 void Queue::copyTextureForBrowser(const ImageCopyTexture& source, const ImageCopyTexture& destination, const Extent3D& copySize, const CopyTextureForBrowserOptions& options) {
 	return wgpuQueueCopyTextureForBrowser(m_raw, &source, &destination, &copySize, &options);
 }

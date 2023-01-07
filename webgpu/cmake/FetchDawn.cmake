@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
 	dawn
 	GIT_REPOSITORY https://dawn.googlesource.com/dawn
-	GIT_TAG        a4c148fe03d7b5e61cab221574cca76cba0d5a55
+	GIT_TAG        chromium/5524
 	GIT_SUBMODULES
 )
 
@@ -35,7 +35,7 @@ function(make_dawn_available)
 	set(TINT_BUILD_HLSL_WRITER OFF)
 	set(TINT_BUILD_MSL_WRITER OFF)
 	set(TINT_BUILD_SPV_WRITER ON)
-	set(TINT_BUILD_WGSL_WRITER OFF)
+	set(TINT_BUILD_WGSL_WRITER ON) # Because of crbug.com/dawn/1481
 	set(TINT_BUILD_FUZZERS OFF)
 	set(TINT_BUILD_SPIRV_TOOLS_FUZZER OFF)
 	set(TINT_BUILD_AST_FUZZER OFF)
