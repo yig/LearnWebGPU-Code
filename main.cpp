@@ -241,13 +241,15 @@ int main (int, char**) {
 		
 		RenderPassDescriptor renderPassDesc{};
 
+		constexpr auto NaN = std::numeric_limits<double>::quiet_NaN();
+
 		WGPURenderPassColorAttachment renderPassColorAttachment = {};
 		renderPassColorAttachment.view = nextTexture;
 		renderPassColorAttachment.resolveTarget = nullptr;
 		renderPassColorAttachment.loadOp = LoadOp::Clear;
 		renderPassColorAttachment.storeOp = StoreOp::Store;
 		renderPassColorAttachment.clearValue = Color{ 0.05, 0.05, 0.05, 1.0 };
-		renderPassColorAttachment.clearColor = Color{ 0.05, 0.05, 0.05, 1.0 };
+		renderPassColorAttachment.clearColor = Color{ NaN, NaN, NaN, NaN };
 		renderPassDesc.colorAttachmentCount = 1;
 		renderPassDesc.colorAttachments = &renderPassColorAttachment;
 
