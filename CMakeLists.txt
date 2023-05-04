@@ -17,6 +17,8 @@ add_subdirectory(glfw3webgpu)
 
 add_executable(App
 	main.cpp
+	webgpu-release.h
+	magic_enum.hpp
 )
 
 if(DEV_MODE)
