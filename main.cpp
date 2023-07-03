@@ -24,8 +24,6 @@
  * SOFTWARE.
  */
 
-#include "webgpu-release.h"
-
  // An optional library that makes displaying enum values much easier
 #include "magic_enum.hpp"
 
