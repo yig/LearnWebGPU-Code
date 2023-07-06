@@ -268,7 +268,7 @@ int main (int, char**) {
 
 		renderPass.end();
 		
-		wgpuTextureViewRelease(nextTexture);
+		nextTexture.release();
 
 		CommandBufferDescriptor cmdBufferDescriptor;
 		cmdBufferDescriptor.label = "Command buffer";
@@ -276,12 +276,22 @@ int main (int, char**) {
 		queue.submit(command);
 
 		swapChain.present();
+
+#ifdef WEBGPU_BACKEND_DAWN
+		// Check for pending error callbacks
+		device.tick();
+#endif
 	}
 
-	wgpuSwapChainRelease(swapChain);
-	wgpuDeviceRelease(device);
-	wgpuAdapterRelease(adapter);
-	wgpuInstanceRelease(instance);
+	vertexBuffer.destroy();
+	vertexBuffer.release();
+	indexBuffer.destroy();
+	indexBuffer.release();
+
+	swapChain.release();
+	device.release();
+	adapter.release();
+	instance.release();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
