@@ -321,7 +321,9 @@ int main (int, char**) {
 		CommandBufferDescriptor cmdBufferDescriptor;
 		cmdBufferDescriptor.label = "Command buffer";
 		CommandBuffer command = encoder.finish(cmdBufferDescriptor);
+		encoder.release();
 		queue.submit(command);
+		command.release();
 
 		swapChain.present();
 #ifdef WEBGPU_BACKEND_DAWN
@@ -335,10 +337,13 @@ int main (int, char**) {
 	indexBuffer.destroy();
 	indexBuffer.release();
 
+	pipeline.release();
+	shaderModule.release();
 	swapChain.release();
 	device.release();
 	adapter.release();
 	instance.release();
+	surface.release();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
