@@ -112,6 +112,7 @@ void inspectAdapter(WGPUAdapter adapter) {
 		std::cout << " - 0x" << f << std::endl;
 	}
 	std::cout << std::dec; // Restore decimal numbers
+	/*
 	WGPUAdapterProperties properties = {};
 	properties.nextInChain = nullptr;
 	wgpuAdapterGetProperties(adapter, &properties);
@@ -133,6 +134,7 @@ void inspectAdapter(WGPUAdapter adapter) {
 	std::cout << std::hex;
 	std::cout << " - adapterType: 0x" << properties.adapterType << std::endl;
 	std::cout << " - backendType: 0x" << properties.backendType << std::endl;
+	*/
 	std::cout << std::dec; // Restore decimal numbers
 }
 

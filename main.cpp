@@ -90,6 +90,20 @@ int main() {
 	return 0;
 }
 
+namespace
+{
+WGPUTextureFormat wgpuSurfaceGetPreferredFormat( WGPUSurface surface, WGPUAdapter adapter ) {
+    // spdlog::info( "wgpuSurfaceGetPreferredFormat(): {:#06x}", int(wgpuSurfaceGetPreferredFormat( vars->surface, vars->adapter )) );
+    WGPUSurfaceCapabilities capabilities{};
+    wgpuSurfaceGetCapabilities( surface, adapter, &capabilities );
+    // spdlog::info( "wgpuSurfaceGetCapabilities().formatCount: {}", capabilities.formatCount );
+    // spdlog::info( "wgpuSurfaceGetCapabilities().formats[0]: {:#06x}", int(capabilities.formats[0]) );
+    const WGPUTextureFormat result = capabilities.formats[0];
+    wgpuSurfaceCapabilitiesFreeMembers( capabilities );
+    return result;
+}
+}
+
 bool Application::Initialize() {
 	// Open window
 	glfwInit();
@@ -125,12 +139,14 @@ bool Application::Initialize() {
 	device = requestDeviceSync(adapter, &deviceDesc);
 	std::cout << "Got device: " << device << std::endl;
 
+#if 0
 	auto onDeviceError = [](WGPUErrorType type, char const* message, void* /* pUserData */) {
 		std::cout << "Uncaptured device error: type " << type;
 		if (message) std::cout << " (" << message << ")";
 		std::cout << std::endl;
 	};
 	wgpuDeviceSetUncapturedErrorCallback(device, onDeviceError, nullptr /* pUserData */);
+#endif
 	
 	queue = wgpuDeviceGetQueue(device);
 
@@ -214,7 +230,8 @@ void Application::MainLoop() {
 	wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
 
 	wgpuRenderPassEncoderEnd(renderPass);
-	wgpuRenderPassEncoderRelease(renderPass);
+	/// If we don't release the render pass, wgpu v22.1.0.1 crashes.
+	// wgpuRenderPassEncoderRelease(renderPass);
 
 	// Encode and submit the render pass
 	WGPUCommandBufferDescriptor cmdBufferDescriptor = {};
